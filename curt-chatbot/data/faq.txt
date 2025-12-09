@@ -1,0 +1,243 @@
+# CURT Frequently Asked Questions (FAQ)
+
+## General Questions
+
+### When did CURT start?
+CURT started in 2012 as a graduation project with Doctor Mostafa Shawky. The team competed in UK that year, putting our flag first as the first Egyptian team to participate in Formula Student in Egypt and the MENA region.
+
+### What is CURT's vision and mission?
+Through our project, we want to make the field of engineering more appealing to students so they would choose it as their future career. For engineering students, we give the possibility to get the best possible education through a practical experience of building a real formula student race car.
+
+### Is this a prototype or manufacturing team?
+The team only produces one car each year at most, so it's a prototype development team focused on engineering education and competition.
+
+### Will this prototype aim for mass production later?
+The knowledge acquired from building such a project can be projected toward electric vehicles mass production. The team has actually been contacted a couple of times by people who wanted to go into the industry.
+
+### What is the percentage of gender equality?
+40% of our members are females. The team also includes foreign members.
+
+## Recruitment and Membership
+
+### When does recruitment usually open?
+Recruitment opens twice per year:
+- **Mid-August:** Main recruitment at start of academic year, immediately after competition
+- **Late January:** Second round recruitment
+- Additional in-season recruitment occurs at the earliest convenient time
+
+### How can I apply to join CURT?
+Follow our Social Media Accounts and stay tuned for any recruitment announcements.
+
+### What does it take to get accepted on CURT?
+Be passionate and willing to commit to learning and contributing.
+
+### What engineering majors does the team accept?
+For technical roles: Aeronautics and Aerospace, Mechanical Power, Mechanical Design & Production, Electrical Power, Electronics and Communication, Software Engineering, and Chemical Engineering, from both mainstream curriculum and credit hours system at Cairo University's Faculty of Engineering.
+
+For non-technical departments (Business Support): Students from Business and Mass Communication for planning, development, and marketing.
+
+### How much time commitment is expected from team members weekly?
+It varies from person to person and between subsystems, depending on goals set for the year. For some, participation is equivalent to a full-time job, while for others it's more like a part-time commitment. The level of engineering work and dedication required is immense, demanding active and consistent involvement.
+
+### What is the motive for team members?
+It differs for every individual:
+- Some like F1 and want to pursue a career there
+- Some want to gain hands-on technical knowledge in specific areas not provided elsewhere
+- Many other motives, but they all share one common goal: they want to learn and grow
+
+### Are there mandatory training programs for new members?
+Yes, there are mandatory training programs required by technical directors and team leads, including:
+- Sessions focused on every subsystem
+- For mechanical subteams: CAD and finite element analysis training with projects monitored and graded by team leads
+- Tool usage authorization by specialists, with specific training for each tool
+- After the learning phase, members review previous designs and are well-prepared to enter the design phase
+
+## Technical Questions
+
+### What are the car's current specifications?
+**Performance:**
+- Maximum speed: 103 km/h
+- 0-100 km/h acceleration: 5.8 seconds (based on simulations by Vehicle Dynamics and Performance subteam)
+- 0 to maximum speed: 3.5 seconds
+
+**Weight:**
+- Current weight: 360 kg (with main driver)
+- Target: Weight will be enhanced by moving to monocoque-based design and new accumulator pack design
+
+**Dimensions:**
+- Length: 3340 mm
+- Width: 1500 mm
+- Height: 1280 mm
+- Wheelbase: 1700 mm
+- Front Track: 1200 mm
+- Rear Track: 1140 mm
+
+**Cost:**
+- The car is worth around 3 million Egyptian pounds
+
+### What makes CURT's electric car technically unique?
+CURT's electric car stands out regionally through:
+- **In-house development** of critical powertrain components including fully assembled Battery Management System (BMS)
+- **Modified inverter** with custom firmware and hardware tweaks for superior acceleration and endurance
+- **Advanced customization** beyond off-the-shelf solutions used by other MENA teams
+- **Future innovation:** Plans for new in-house accumulator (battery pack) for upcoming events to boost energy density and weight reduction
+- **Pioneer status:** Egypt's first team to compete with electric vehicle since 2019
+- Achieved top MENA design rankings and global 5th place among EV entrants
+
+### How much of the car is manufactured locally?
+It differs between mechanical and electrical systems:
+- **Mechanical systems:** Often have larger local percentages as most materials for car manufacturing are purchased locally and manufactured locally via sponsorships or at the industrial area in 6th of October
+- **Electrical systems:** Most components are imported (answer incomplete in source)
+
+### What are the complete active committees within the team?
+- Mechanical (Chassis, Brakes, Cooling, Aero, Suspension, Transmission)
+- Electrical (Hardware, Embedded, Motor Control, Energy Storage)
+- Operations (Operations Subteam, Continuous Improvement)
+- Autonomous (SLAM, Perception, Path Planning and Control)
+- Software and Gen AI (Software, Gen AI)
+- Business Support (Business Planning, Business Development, Media and Marketing)
+- Performance (Vehicle Dynamics and Performance)
+
+### How many members are in non-technical committees?
+30 members are currently allocated to non-technical committees (Business Support Directory).
+
+## Competition and Travel
+
+### How many competitions has CURT joined?
+CURT has participated a total of 8 times, starting from 2012 at UK with an ICE Car as the first Formula Student team in MENA Region.
+
+### What are the difficulties traveling to competitions in London?
+**Key Travel Challenges:**
+- **Financial difficulties:** Completing the car annually to competition standards requires intensive fundraising for parts and fabrication
+- **Shipping logistics:** Securing affordable shipping deals for the vehicle to London/Silverstone consumes large portion of budget
+- **High costs:** Competition entry fees, visas, and team travel costs for 140+ members strain resources
+- **Technical issues:** Past limitations to static events compound preparation pressures
+- **Currency fluctuations:** Exacerbate annual funding gaps
+- **Sponsor dependencies:** Heavy reliance on partnerships
+
+### Which members travel to competitions and how are they chosen?
+**Selection Criteria:**
+- Limited to **25 members** who are fully knowledgeable about their subsystem and can serve as strong team representatives
+- **Advantage to 2nd/3rd year students:** Guarantees team benefits from their competition experience upon return, ensuring continuity and eligibility for future events
+- **Typical profile:** Key departments (Mechanical Power, Design, Electronics, etc.) to handle dynamic events, presentations, and on-site adjustments
+- Final choices consider specific competition requirements for technical scrutineering
+
+### How is the car transported to competitions?
+- **Method:** Sea freight through specialized shipping sponsors like ABS Logistics (official partner)
+- **Process:** Securing shipping deal, crating vehicle securely after completion, coordinating with competition organizers
+- **Timing:** Arrival typically 1-2 weeks before events to allow scrutineering and setup
+- **Additional items:** Parts and tools may arrive separately via air or sea
+
+### Are members' travel costs funded?
+It depends on the year, but most recently living expenses are personal, but flight tickets are secured totally or partially from sponsorship.
+
+## Funding and Support
+
+### Who funds the team?
+Various parties fund the team:
+- **Cairo University Faculty:** Provides financial aid covering approximately one-sixth (quarter in some sources) of yearly expenses
+- **Cash sponsorships:** From various sponsors
+- **Component sponsorships:** Parts and materials provided by sponsors
+
+### What is the current fundraising goal for 2025/2026 season?
+Focus on:
+- Completing remaining parts needed for current car to compete
+- Competition-related expenses: entry fees, new tires, driver suits, helmets
+- Team continuity: Manufacturing new vehicle and designing new accumulator pack for next year's car
+- Battery cells potentially acquired through sponsorships
+
+### What level of support does Cairo University provide?
+The Faculty provides financial aid that covers a quarter of yearly expenses if the team plans on consistently developing a Formula Student car to participate yearly in Formula Student.
+
+### Does participation offer academic credit?
+Not yet, but it has been discussed before and will be further discussed later this year.
+
+## Operations and Policies
+
+### How is knowledge transfer managed?
+**Documentation-Based System:**
+- Comprehensive documentation including recorded sessions, PDFs, and documented procedures
+- Previous team leaders record sessions for each subteam during learning phase
+- Continuous updating and maintenance of documentation is well-established
+- New members must be familiar with entire design process through documentation
+- Original designer doesn't need to be present to explain decisions
+
+### What is the workshop and manufacturing policy?
+**University Workshop:**
+- Usage authorized annually by university
+- Team can manufacture any required parts on-site
+
+**External Partnerships:**
+- If specific capability not available, team uses established partnerships
+- Partners include: الهيئة الهندسية للتصنيع, Promil, and other manufacturers
+- Ensures flexibility and access to advanced manufacturing capabilities
+- Team coordinates between internal fabrication and external suppliers
+
+### What happens if a major component delivery is delayed?
+The team has faced many such scenarios but always got through them:
+- Shipment delay is normal in Egypt
+- Contingency plan automatically activated
+- Team finds other ways to acquire component
+- If necessary, team will buy component at competition itself if it doesn't affect testing
+
+### What liability insurance and safety measures are in place?
+**Competition Insurance:**
+- Team must be insured by faculty for 10 million euros for any accident (competition registration requirement)
+
+**Manufacturing and Testing:**
+- Robust quality control and regular inspections
+- Adherence to industry standards minimize risks and support insurance claims
+- Teams often secure coverage contractually required by clients or event organizers
+- Extends to legal defense and settlements
+
+**Racing Coverage:**
+- Comprehensive packages combine accident coverage with environmental and product recall protections
+
+## Engagement and Media
+
+### Where can the public view the car?
+**Static displays:** Various events across Egypt
+**Dynamic demonstrations:** Tracks such as Autovroom and others
+**Announcements:** All team participations and testing sessions announced on official social media channels
+
+### What is the estimated total annual reach of digital platforms?
+Contact Media and Marketing subteam for specific metrics.
+
+### What is the contact email for general inquiries?
+You can ask any question via the team website or use social media channels.
+
+## Media Appearances
+
+CURT has been featured in numerous Egyptian media outlets:
+- DMC Official Website
+- Egyptian Streets Article
+- OnE Ehlam TV show
+- Masrawy Article
+- Nile TV Today's Youth
+- Alhayah Kholaset Elkalam
+- DOT Masr
+- CBC Extra
+- Shafaf Network
+- Sabah Dream Program
+- TechnoNile
+- Elbeetbeltak Show
+- Nile Life nhrak sa3eed show
+
+## Future and Vision
+
+### What is the long-term vision (5-10 years)?
+**2026:** Focus on scrutineering and static events, use dynamic events as bonus scoring, resolve key compliance issues
+
+**2027:** Compete with fully redesigned vehicle, new battery system to complete endurance, target top-15 result
+
+**2028:** Reach highest EV readiness level in CURT history, maximize points across static and dynamic events, compete for top-10 position
+
+**5 years:** Team must be well-known talent exporter for all engineering fields in Egypt
+
+### How does CURT differentiate itself from other Cairo University teams?
+- Pioneering history as Egypt's first Formula Student team (founded 2012 from graduation project)
+- Unmatched achievements among Egyptian teams
+- First African team to advance to dynamic events in Germany
+- Top regional rankings consistently
+- International excellence with multiple competition milestones
+- Hands-on practical learning experience building real formula race cars
