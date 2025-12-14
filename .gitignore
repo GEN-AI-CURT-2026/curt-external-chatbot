@@ -1,0 +1,6 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+curt-chatbot/backend/.env
+curt-chatbot/backend/chroma
