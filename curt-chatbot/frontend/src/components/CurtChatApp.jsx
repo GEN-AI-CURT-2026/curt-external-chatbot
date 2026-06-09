@@ -43,7 +43,6 @@ export default function CurtChatApp() {
 
       let cleanAnswer = data.answer;
       
-      // Remove system warnings completely
       cleanAnswer = cleanAnswer.replace(/\*System Note:.*?\*/gi, '');
       
       if (cleanAnswer.includes('**Sources:**')) {
@@ -83,7 +82,6 @@ export default function CurtChatApp() {
         darkMode ? 'bg-[#111827]/40' : 'bg-white border-x border-slate-200'
       }`}>
         
-        {/* Header */}
         <header className={`flex items-center justify-between p-4 border-b backdrop-blur-md transition-colors duration-300 ${
           darkMode ? 'border-slate-800/60 bg-[#111827]/80' : 'border-slate-200 bg-white/90'
         }`}>
@@ -115,7 +113,6 @@ export default function CurtChatApp() {
           </div>
         </header>
 
-        {/* Chat window viewport */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center max-w-sm mx-auto space-y-4">
@@ -159,7 +156,6 @@ export default function CurtChatApp() {
           <div ref={chatEndRef} />
         </div>
 
-        {/* Input Text Box (Suggestions Completely Removed Here) */}
         <div className={`p-4 border-t backdrop-blur-md transition-colors duration-300 ${
           darkMode ? 'bg-[#111827]/60 border-slate-800/50' : 'bg-slate-50/80 border-slate-200'
         }`}>

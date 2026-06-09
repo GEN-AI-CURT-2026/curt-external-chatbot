@@ -1,8 +1,19 @@
-chromadb>=0.5.23
-openai>=1.104.2
-python-dotenv==1.0.0
-langchain>=0.3.27
-langchain-openai>=0.3.33
-langchain-community>=0.3.27
-langchain-text-splitters>=0.3.0
-pydantic>=2.7.4
+# Web Framework & ASGI Server
+fastapi==0.111.0
+uvicorn==0.30.1
+pydantic==2.7.2
+
+# LangChain Core & Ecosystem
+langchain==0.2.1
+langchain-core==0.2.3
+langchain-openai==0.1.8
+
+# AI Models & Vector Database Clients
+pinecone-client==4.1.0
+cohere==5.5.3
+openai==1.30.3
+
+# System Utilities & Fault Tolerance
+python-dotenv==1.0.1
+tenacity==8.3.0
+asyncio==3.4.3
