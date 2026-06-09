@@ -1,4 +1,5 @@
 import os
+import re
 import hashlib
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -17,6 +18,7 @@ load_dotenv()
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGCHAIN_PROJECT", "curt-external-chatbot-prod")
 
+
 class CurtStructuredResponse(BaseModel):
     """The strict data schema returned to the React Frontend without suggestion arrays."""
     answer: str = Field(description="The finalized answering text or fallback message.")
@@ -34,21 +36,18 @@ class CURTRagPipeline:
         if not openai_key:
             raise EnvironmentError("Missing required OPENAI_API_KEY for production.")
 
-        # Primary Model setup with strict timeouts
         self.primary_llm = ChatOpenAI(
             model="gpt-3.5-turbo", 
             temperature=0,
             request_timeout=30
         )
-        
-        # Backup Fallback Model 
+
         self.fallback_llm = ChatOpenAI(
             model="gpt-3.5-turbo-0125", 
             temperature=0,
             request_timeout=20
         )
 
-        # Apply structural retries and fallbacks directly to processing chains
         self.reliable_llm = (
             self.primary_llm
             .with_retry(
@@ -62,13 +61,11 @@ class CURTRagPipeline:
             )
         )
 
-        # Structured-output LLM configuration to handle ultimate Schema parsing
         self.structured_parser_llm = ChatOpenAI(
             model="gpt-3.5-turbo",
             temperature=0
         ).with_structured_output(CurtStructuredResponse)
 
-        # Infrastructure Components
         self.expansion_llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
         self.cohere_client = cohere.Client(os.getenv("COHERE_API_KEY"))
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
@@ -78,7 +75,6 @@ class CURTRagPipeline:
         self.index = self.pc.Index(self.index_name)
         self.namespace = "curt_docs"
 
-        # Fallback Confidence Boundaries
         self.CONFIDENCE_HIGH = 0.80
         self.CONFIDENCE_LOW  = 0.30
 
@@ -92,6 +88,18 @@ class CURTRagPipeline:
         self.rag_chain = (
             prompts.rag_prompt_template | self.reliable_llm | StrOutputParser()
         )
+
+    def _is_thank_you(self, text: str) -> bool:
+        """Helper to scan user text for common conversational courtesies."""
+        clean_text = text.lower().strip().replace(".", "").replace("!", "")
+        patterns = [
+            r"^(thank you|thanks|thx|ty|thank u)( mechanical)?( team)?$",
+            r"^perfect thanks$",
+            r"^great thanks$",
+            r"^appreciate it$",
+            r"^many thanks$"
+        ]
+        return any(re.match(p, clean_text) for p in patterns)
 
     @retry(
         stop=stop_after_attempt(3),
@@ -117,12 +125,20 @@ class CURTRagPipeline:
 
     def run(self, query: str, chat_history: List[Dict] = []) -> Dict[str, Any]:
         """Runs free reasoning RAG logic, then passes results to schema validation."""
- 
+
         if prompts.is_greeting(query):
             return {
                 "answer": prompts.GREETING_RESPONSE, 
                 "status": "greeting", 
                 "confidence_score": 1.0
+            }
+
+        if self._is_thank_you(query):
+            return {
+                "answer": "You're very welcome! Dominate the track! 🏎️ Let me know if you need anything else down the line.",
+                "status": "courtesy_response",
+                "confidence_score": 1.0,
+                "sources": []
             }
 
         expanded_query = self.expansion_chain.invoke({"query": query})
