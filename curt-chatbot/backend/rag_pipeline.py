@@ -1,181 +1,197 @@
 import os
-from typing import List, Dict, Any
+import hashlib
+from pathlib import Path
+from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma 
 from langchain_core.output_parsers import StrOutputParser
-import prompts
-import build_chroma as chroma_config 
+from langchain_core.documents import Document
+from pinecone import Pinecone
 import cohere
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from pydantic import BaseModel, Field
+import prompts
 
-# Load environment variables
 load_dotenv()
+
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGCHAIN_PROJECT", "curt-external-chatbot-prod")
+
+class CurtStructuredResponse(BaseModel):
+    """The strict data schema returned to the React Frontend without suggestion arrays."""
+    answer: str = Field(description="The finalized answering text or fallback message.")
+    status: str = Field(description="The execution pipeline state flag.")
+    confidence_score: float = Field(ge=0.0, le=1.0, description="Pipeline confidence alignment score.")
+
 
 class CURTRagPipeline:
     def __init__(self):
         """
-        Initialize the RAG pipeline using configuration from build_chroma.py
+        Initialize the Highly Reliable RAG pipeline with built-in Retries, 
+        Fallbacks, and Schema Guardrails.
         """
-        self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
-        #query expansioin using prompts.py
+        openai_key = os.getenv("OPENAI_API_KEY")
+        if not openai_key:
+            raise EnvironmentError("Missing required OPENAI_API_KEY for production.")
+
+        # Primary Model setup with strict timeouts
+        self.primary_llm = ChatOpenAI(
+            model="gpt-3.5-turbo", 
+            temperature=0,
+            request_timeout=30
+        )
+        
+        # Backup Fallback Model 
+        self.fallback_llm = ChatOpenAI(
+            model="gpt-3.5-turbo-0125", 
+            temperature=0,
+            request_timeout=20
+        )
+
+        # Apply structural retries and fallbacks directly to processing chains
+        self.reliable_llm = (
+            self.primary_llm
+            .with_retry(
+                retry_if_exception_type=(Exception,),
+                stop_after_attempt=3,
+                wait_exponential_jitter=True
+            )
+            .with_fallbacks(
+                [self.fallback_llm],
+                exceptions_to_handle=(Exception,)
+            )
+        )
+
+        # Structured-output LLM configuration to handle ultimate Schema parsing
+        self.structured_parser_llm = ChatOpenAI(
+            model="gpt-3.5-turbo",
+            temperature=0
+        ).with_structured_output(CurtStructuredResponse)
+
+        # Infrastructure Components
         self.expansion_llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
-        #for reranking
         self.cohere_client = cohere.Client(os.getenv("COHERE_API_KEY"))
-
-        #Load Vector Store and connect to chromadb
-        db_path = str(chroma_config.CHROMA_DIR)
-        model_name = chroma_config.EMBEDDING_MODEL
-        collection_name = chroma_config.COLLECTION_NAME
-
-        # print(f"Loading Vector Store from: {db_path}")
-        # print(f"Using Embedding Model: {model_name}")
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
         
-        self.embeddings = OpenAIEmbeddings(
-            model=model_name,
-            openai_api_key=os.getenv("OPENAI_API_KEY")
-        )
+        self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+        self.index_name = os.getenv("PINECONE_INDEX_NAME", "external-chatbot")
+        self.index = self.pc.Index(self.index_name)
+        self.namespace = "curt_docs"
 
-        self.vector_db = Chroma(
-            persist_directory=db_path,
-            embedding_function=self.embeddings,
-            collection_name=collection_name
-        )
-        
-        self.retriever = self.vector_db.as_retriever(search_kwargs={"k": 10})  #top 10 most relevant chunks
+        # Fallback Confidence Boundaries
+        self.CONFIDENCE_HIGH = 0.80
+        self.CONFIDENCE_LOW  = 0.30
 
         self._init_chains()
 
     def _init_chains(self):
-        """Initialize all LangChain runnables"""
-        
+        """Bind components using the reliable LLM runnables."""
         self.expansion_chain = (
-            prompts.query_expansion_template  #from prompts.py
-            | self.expansion_llm 
-            | StrOutputParser()
+            prompts.query_expansion_template | self.expansion_llm | StrOutputParser()
         )
-
-        self.compression_chain = (
-            prompts.compression_template 
-            | self.llm 
-            | StrOutputParser()
-        )
-
         self.rag_chain = (
-            prompts.rag_prompt_template 
-            | self.llm 
-            | StrOutputParser()
+            prompts.rag_prompt_template | self.reliable_llm | StrOutputParser()
         )
 
-        self.hallucination_chain = (
-            prompts.hallucination_check_template 
-            | self.llm 
-            | StrOutputParser()
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=5),
+        retry=retry_if_exception_type(Exception),
+        reraise=True
+    )
+    def _query_pinecone_with_retry(self, query_vector: List[float], top_k: int = 10) -> List[Document]:
+        """Queries Pinecone Vector Store with automatic exponential backoffs."""
+        response = self.index.query(
+            vector=query_vector, top_k=top_k, namespace=self.namespace, include_metadata=True
         )
-    def _rerank_with_cohere(self, query: str, documents: List, top_n: int = 5) -> List:
-        """Rerank documents using Cohere's reranking API."""
-        if not documents:
-            return []
-        
-        doc_texts = [doc.page_content for doc in documents]
-        
-        try:
-            rerank_response = self.cohere_client.rerank(
-                model="rerank-english-v3.0",
-                query=query,
-                documents=doc_texts,
-                top_n=top_n,
-                return_documents=True
-            )
-            
-            reranked_docs = []
-            for result in rerank_response.results:
-                original_doc = documents[result.index]
-                original_doc.metadata['rerank_score'] = result.relevance_score
-                reranked_docs.append(original_doc)
-            
-            print(f"Cohere Reranking: {len(documents)} → {len(reranked_docs)} docs")
-            
-            return reranked_docs
-            
-        except Exception as e:
-            print(f"Cohere reranking failed: {e}")
-            return documents[:top_n]
-        
+        documents = []
+        for match in response.matches:
+            documents.append(Document(
+                page_content=match.metadata.get("text", ""),
+                metadata={
+                    "source": match.metadata.get("source", "Unknown"),
+                    "raw_score": match.score
+                }
+            ))
+        return documents
+
     def run(self, query: str, chat_history: List[Dict] = []) -> Dict[str, Any]:
-        
+        """Runs free reasoning RAG logic, then passes results to schema validation."""
+ 
         if prompts.is_greeting(query):
-            return {"answer": prompts.GREETING_RESPONSE, "sources": [], "status": "greeting"}
-        
-        if prompts.is_off_topic(query):
-            return {"answer": prompts.OFF_TOPIC_RESPONSE, "sources": [], "status": "off_topic"}
+            return {
+                "answer": prompts.GREETING_RESPONSE, 
+                "status": "greeting", 
+                "confidence_score": 1.0
+            }
 
         expanded_query = self.expansion_chain.invoke({"query": query})
-        print(f"Expanded Query: '{expanded_query}'")
 
-        # Retrieval 
-        raw_docs = self.retriever.invoke(expanded_query)
-        #print(f"Retrieved {len(raw_docs)} raw documents")
-        
+        query_vector = self.embeddings.embed_query(expanded_query)
+        try:
+            raw_docs = self._query_pinecone_with_retry(query_vector, top_k=10)
+        except Exception:
+            return {
+                "answer": "Pipeline Error: The vector index is temporarily unreachable.",
+                "status": "database_error", 
+                "confidence_score": 0.0
+            }
+
         if not raw_docs:
-            return {"answer": prompts.NO_CONTEXT_RESPONSE, "sources": [], "status": "no_docs"}
+            return {
+                "answer": prompts.NO_CONTEXT_RESPONSE, 
+                "status": "no_context", 
+                "confidence_score": 0.0
+            }
 
-        #Reranking using cohere
-        valid_docs = self._rerank_with_cohere(query, raw_docs, top_n=5)
+        doc_texts = [doc.page_content for doc in raw_docs]
+        rerank_response = self.cohere_client.rerank(
+            model="rerank-english-v3.0", query=query, documents=doc_texts, top_n=5
+        )
+        valid_docs = [raw_docs[res.index] for res in rerank_response.results]
+
+        primary_score = valid_docs[0].metadata.get("raw_score", 0.0)
+        
+        if primary_score < self.CONFIDENCE_LOW:
+            return {
+                "answer": prompts.NO_CONTEXT_RESPONSE, 
+                "status": "fallback_insufficient_confidence",
+                "confidence_score": primary_score
+            }
+
+        is_low_confidence = primary_score < self.CONFIDENCE_HIGH
         compressed_context = "\n\n".join([doc.page_content for doc in valid_docs])
-            
-        # Generation
+
         formatted_history = prompts.format_chat_history(chat_history)
-        
-        answer = self.rag_chain.invoke({
-            "context": compressed_context,
-            "question": query, 
-            "chat_history": formatted_history
+        raw_rag_output = self.rag_chain.invoke({
+            "context": compressed_context, "question": query, "chat_history": formatted_history
         })
 
-        #Hallucination Detection
-        check_result = self.hallucination_chain.invoke({
-            "context": compressed_context,
-            "answer": answer
-        })
+        parsing_prompt = (
+            f"Convert this free-form racing team chatbot answer into the required strict schema configuration.\n"
+            f"If it mentions fallback scenarios, assign a status matching it.\n\n"
+            f"Raw AI Answer:\n{raw_rag_output}"
+        )
         
-        print(f"Verification: {check_result}")
-
-        if check_result.strip().upper().startswith("HALLUCINATION"):
-            answer += "\n\n*(Note: I verified this answer against my database and found some parts might not be explicitly supported. Please verify with official team documents.)*"
-
-        final_response = prompts.enhance_response_with_sources(answer, valid_docs)
-        return {
-            "answer": final_response,
-            "raw_answer": answer,
-            "sources": valid_docs,
-            "expanded_query": expanded_query,
-            "status": "success"
-        }
-
-def take_input(input):
-    """Function to take input """
-    return input
-
-if __name__ == "__main__":
-    try:
-        pipeline = CURTRagPipeline()
-        user_input = take_input("What are the current projects of the Cairo University Racing Team?")
-        result = pipeline.run(user_input)
-        print("\n" + "="*50)
-        print("AI RESPONSE:")
-        print(result["answer"])
-        print("="*50)
-        print("\nSPECIFIC CHUNKS USED:")
-        
-        if result["sources"]:
-            for i, doc in enumerate(result["sources"], 1):
-                source_name = os.path.basename(doc.metadata.get('source', 'Unknown'))
+        try:
+            structured_output: CurtStructuredResponse = self.structured_parser_llm.invoke(parsing_prompt)
+            
+            final_answer = structured_output.answer
+            if is_low_confidence:
+                final_answer = "*System Note: Displaying limited matching database data.*\n\n" + final_answer
                 
-                print(f"\n[Chunk {i}] Source: {source_name}")
-                print(f"Content: {doc.page_content}")
-                print("-" * 40)
-        else:
-            print("No relevant chunks were found.")
-    except Exception as e:
-        print(f"\nError: {e}")
-        print("Ensure you have run 'python build_chroma.py' first!")
+            final_response = prompts.enhance_response_with_sources(final_answer, valid_docs)
+            
+            return {
+                "answer": final_response,
+                "status": "low_confidence_success" if is_low_confidence else structured_output.status,
+                "confidence_score": primary_score,
+                "sources": valid_docs
+            }
+        except Exception as validation_error:
+            print(f"Schema Validation Guardrail caught parsing issue: {validation_error}")
+            return {
+                "answer": prompts.enhance_response_with_sources(raw_rag_output, valid_docs),
+                "status": "unstructured_success",
+                "confidence_score": primary_score
+            }
